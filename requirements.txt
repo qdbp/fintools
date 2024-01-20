@@ -1,0 +1,5 @@
+click~=8.1.7
+lxml~=5.1.0
+ofxtools==0.9.5
+quiffen==2.0.10
+pandas~=2.1.4

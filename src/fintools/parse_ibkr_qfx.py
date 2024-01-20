@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from os.path import splitext
+from pathlib import Path
 
 import click
 from lxml.etree import Element
@@ -8,28 +8,25 @@ from ofxtools import OFXTree
 
 
 def write_atm_line(element: Element) -> str:
-
     amt = Decimal(element.find(".//TRNAMT").text)
     memo = "(".join(element.find(".//MEMO").text.split("(")[:-1]).strip()
-    date = datetime.strptime(
-        element.find(".//DTPOSTED").text[:8], "%Y%m%d"
-    ).date()
+    date = datetime.strptime(element.find(".//DTPOSTED").text[:8], "%Y%m%d").date()  # noqa: DTZ007
 
     return f'{date.isoformat()},"{memo}",{amt:.2f}'
 
 
 @click.command()
-@click.argument("fn", type=str)
-def parse_ibkr_qfx(fn: str) -> None:
+@click.argument("fn", type=Path)
+def parse_ibkr_qfx(fn: Path) -> None:
     """
     Parses the raw IBKR QFX file FN into a split representation, factoring out
     mastercard transactions to a separate CSV file.
     """
 
-    out_qfx_fn = (basename := splitext(fn)[0]) + ".out.qfx"
-    out_csv_fn = basename + ".csv"
+    out_qfx_fn = fn.parent.joinpath(fn.stem + ".out.qfx")
+    out_csv_fn = fn.parent.joinpath(fn.stem + ".csv")
 
-    with open(fn, "rb") as f:
+    with fn.open("rb") as f:
         parser = OFXTree()
         tree = parser.parse(f)
 
@@ -41,10 +38,9 @@ def parse_ibkr_qfx(fn: str) -> None:
             transactions.append(write_atm_line(tran))
             tran.find(".//MEMO").text = "MasterCard Transaction"
 
-    with open(fn, "r") as f_in, open(out_qfx_fn, "wb") as f_out:
+    with fn.open() as f_in, out_qfx_fn.open("wb") as f_out:
         # copy header
         f_out.write("".join(f_in.readlines()[:9]).encode("utf-8"))
         parser.write(f_out)
 
-    with open(out_csv_fn, "w") as f:
-        f.write("\n".join(transactions))
+    out_csv_fn.write_text("\n".join(transactions))

@@ -1,0 +1,51 @@
+[project]
+name = "fintools"
+dynamic = ["dependencies"]
+version = "0.9.0"
+
+[project.scripts]
+fintools = "fintools.main:main"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.black]
+target-version = ['py311']
+line-length = 105
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "test"]
+addopts = "-n 0"
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"
+strict = true
+
+[tool.ruff]
+line-length = 105
+target-version = 'py311'
+select = ["ALL"]
+ignore = [
+    "D",
+    "B905",
+    "E402",
+    "E731",
+    "E741",
+    "FIX",
+    "PD002",
+    "PD011",
+    "PD901",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "PLW2901",
+    "SIM108",
+    "TD",
+]
+# this stops ruff deleting unused "debugger dummy" variables in temp code
+unfixable = ["F841"]
+
+
